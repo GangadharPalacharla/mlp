@@ -70,51 +70,36 @@ CODE:
 
 
 
-import pandas as pd
-df = pd.read_csv("students.csv")
-attributes = list(df.columns[:-1])
-target = 'scholarship'
-S = [['ϕ'] * len(attributes)]
-G = [['?' for _ in range(len(attributes))]]
-def more_general(h1, h2):
-    more = False
-    for x, y in zip(h1, h2):
-        if x != '?' and (y == 'ϕ' or (x != y and y != '?')):
-            return False
-        if x == '?' and y != '?':
-            more = True
-    return more or h1 == h2
-for i, row in df.iterrows():
-    example = list(row[:-1])
-    label = row[target]
-    if label == 'yes':
-        if S[0][0] == 'ϕ':
-            S[0] = example
-        for g in G[:]:
-            if not more_general(g, example):
-                G.remove(g)
-        for j in range(len(S[0])):
-            if S[0][j] != example[j]:
-                S[0][j] = '?'
+import csv
+
+data = []
+with open("weather.csv", "r") as f:
+    for row in csv.reader(f):
+        data.append(row)
+
+data = data[1:]
+
+S = ['0'] * (len(data[0]) - 1)
+G = ['?'] * (len(data[0]) - 1)
+
+for row in data:
+    attrs = row[:-1]
+    target = row[-1]
+
+    if target == "yes":
+        for i in range(len(S)):
+            if S[i] == '0':
+                S[i] = attrs[i]
+            elif S[i] != attrs[i]:
+                S[i] = '?'
     else:
-        G_new = []
-        for g in G:
-            if all(x == '?' or x == y for x, y in zip(g, example)):
-                for j in range(len(g)):
-                    if g[j] == '?':
-                        if S[0][j] != example[j] and S[0][j] != '?':
-                            h = g.copy()
-                            h[j] = S[0][j]
-                            if all(more_general(gh, S[0]) for gh in [h]):
-                                G_new.append(h)
-            else:
-                G_new.append(g)
-        G = []
-        for h in G_new:
-            if not any(more_general(h2, h) for h2 in G_new if h2 != h):
-                G.append(h)
-print("S:", S)
-print("G:", G)
+        for i in range(len(S)):
+            if G[i] != '?' and S[i] != attrs[i]:
+                G[i] = '?'
+
+print("Final Specific Hypothesis:", S)
+print("Final General Hypothesis:", G)
+
 
 
 
@@ -215,6 +200,48 @@ y_pred = mlp.predict(X_test)
 print("Accuracy:", accuracy_score(y_test, y_pred))
 
 
+
+EXPERIMENT 5(sunita mam vaste idi execute cheyandi!!!)
+import numpy as np
+
+X = np.array([[0, 0],
+              [0, 1],
+              [1, 0],
+              [1, 1]])
+
+y = np.array([[0],
+              [1],
+              [1],
+              [1]])
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+w1 = np.random.rand()
+w2 = np.random.rand()
+w3 = np.random.rand()
+
+lr = 0.1
+
+for epoch in range(5000):
+    for i in range(4):
+        hidden = sigmoid(X[i][0] * w1 + X[i][1] * w2)
+        output = sigmoid(hidden * w3)
+        error = y[i] - output
+        d_output = error * sigmoid_derivative(output)
+        d_hidden = d_output * w3 * sigmoid_derivative(hidden)
+        w3 += lr * hidden * d_output
+        w1 += lr * X[i][0] * d_hidden
+        w2 += lr * X[i][1] * d_hidden
+
+print("Final Predictions:")
+for i in range(4):
+    hidden = sigmoid(X[i][0] * w1 + X[i][1] * w2)
+    output = sigmoid(hidden * w3)
+    print(X[i], "→", round(float(output), 3))
 
 
 
@@ -405,6 +432,7 @@ y_query = lwlr(x_train, y_train, x_query, tau=0.5)
 plt.scatter(x_train, y_train)
 plt.plot(x_query, y_query)
 plt.show()
+
 
 
 
